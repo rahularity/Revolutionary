@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "77770258516",
+    "firebase_url": "https://revolutionary-2cbc9.firebaseio.com",
+    "project_id": "revolutionary-2cbc9",
+    "storage_bucket": "revolutionary-2cbc9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:77770258516:android:bdf3a40f77c96bd0",
+        "android_client_info": {
+          "package_name": "com.example.rahul.revolutionary"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "77770258516-hs74jq2ek17dr5k8osur0dq36ki70ubq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.rahul.revolutionary",
+            "certificate_hash": "b0439295a5a05c1fe7693f28b52f2fa3aeb8f516"
+          }
+        },
+        {
+          "client_id": "77770258516-nqv6ic0toju7lcs3ahlrkrpp0jo9f0fo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAZ-uTYlaZR7n5F5PS1G_XZnZmnvsGGT4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "77770258516-nqv6ic0toju7lcs3ahlrkrpp0jo9f0fo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

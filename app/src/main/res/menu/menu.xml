@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/all"
+        android:title="All">
+    </item>
+
+    <item
+        android:id="@+id/add_post"
+        android:title="Add"
+        app:showAsAction="always"
+        android:icon="@drawable/add">
+    </item>
+
+    <item
+        android:id="@+id/liked_posts"
+        android:title="Liked Posts">
+    </item>
+
+    <item
+        android:title="Social"
+        android:id="@+id/social">
+    </item>
+
+    <item
+        android:id="@+id/conversation"
+        android:title="Conversation">
+    </item>
+
+    <item android:title="Ideas"
+        android:id="@+id/ideas">
+    </item>
+
+    <item
+        android:title="Day to Day"
+        android:id="@+id/day_to_day">
+    </item>
+
+    <item
+        android:title="Life Style"
+        android:id="@+id/life_style">
+    </item>
+
+    <item
+        android:title="Sign Out"
+        android:id="@+id/sign_out">
+
+    </item>
+
+</menu>
