@@ -40,7 +40,7 @@ public class AddPost extends AppCompatActivity {
     private StorageReference mStorage;
     private Uri imageUri = null,imageUrl;
     private ProgressDialog mProgress_save_to_database;
-    private String Uid;
+    private String Uid,Name,Email;
     private String titleString,contentString;
     private String mCategory = "Social";
 
@@ -54,6 +54,8 @@ public class AddPost extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mStorage = FirebaseStorage.getInstance().getReference().child("blog_pics").child(randomize());
         Uid = mAuth.getCurrentUser().getUid();
+        Name = mAuth.getCurrentUser().getDisplayName();
+        Email = mAuth.getCurrentUser().getEmail();
         newPost = mRef.child("posts").push();
 
         title = (EditText)findViewById(R.id.title_post);
@@ -113,6 +115,8 @@ public class AddPost extends AppCompatActivity {
         newPost.child("title").setValue(titleString);
         newPost.child("content").setValue(contentString);
         newPost.child("uid").setValue(Uid);
+        newPost.child("name").setValue(Name);
+        newPost.child("email").setValue(Email);
         mStorage.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {

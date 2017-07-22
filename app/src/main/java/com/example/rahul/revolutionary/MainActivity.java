@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     boolean mLoved = false;
     String Uid;
     FirebaseAuth mAuth;
-    private DatabaseReference mRefLoves,mRef,mLoveNode;
+    private DatabaseReference mRefLoves,mRef,mLoveNode,mRefPosts;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private Query postsNode;
     ProgressDialog dialog;
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         postsNode = FirebaseDatabase.getInstance().getReference().child("posts");
         mPostsList = (RecyclerView)findViewById(R.id.posts_list);
         mPostsList.setLayoutManager(new LinearLayoutManager(this));
+
 
         Uid = mAuth.getCurrentUser().getUid();
         dialog=new ProgressDialog(this);
@@ -122,11 +123,12 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             case R.id.liked_posts:
-                Query Node = FirebaseDatabase.getInstance().getReference().child("loves");
+                DatabaseReference Node = FirebaseDatabase.getInstance().getReference().child("loves");
+                final String likesUid = "likes/"+Uid;
                 Node.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        postsNode = dataSnapshot.getRef().orderByChild(Uid).equalTo("thank you for your love");
+                        postsNode = dataSnapshot.getRef().orderByChild(likesUid).equalTo("thank you for your love");
                     }
 
                     @Override
@@ -134,8 +136,9 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-                Toast.makeText(MainActivity.this,"you selection is Liked Pages",Toast.LENGTH_SHORT).show();
                 setTheScreen();
+                Toast.makeText(MainActivity.this,"you selection is Liked Pages",Toast.LENGTH_SHORT).show();
+
                 break;
 
 
@@ -165,14 +168,19 @@ public class MainActivity extends AppCompatActivity {
            @Override
            protected void populateViewHolder(PostViewHolder viewHolder, Post model, int position) {
 
+
+
                final String key = getRef(position).getKey();
 
+               mRefPosts = FirebaseDatabase.getInstance().getReference().child("posts").child(key);
                mLoveNode = mRef.child("loves");
                mRefLoves = mRef.child("loves").child(key);
                viewHolder.setTitle(model.getTitle());
                //viewHolder.setImage(getApplicationContext(),model.getImageUrl());
                viewHolder.setLoves(mRefLoves);
                viewHolder.setLoveButton(Uid,key);
+
+
 
                viewHolder.heartButton.setOnClickListener(new View.OnClickListener() {
                    @Override
@@ -185,11 +193,30 @@ public class MainActivity extends AppCompatActivity {
                            public void onDataChange(DataSnapshot dataSnapshot) {
 
                                if(mLoved){
-                                   if(dataSnapshot.child(key).hasChild(Uid)){
-                                       mLoveNode.child(key).child(Uid).removeValue();
+                                   if(dataSnapshot.child(key).child("likes").hasChild(Uid)){
+
+                                       mLoveNode.child(key).child("likes").child(Uid).removeValue();
                                        mLoved = false;
                                    }else {
-                                       mLoveNode.child(key).child(Uid).setValue("thank you for your love");
+                                       mRefPosts.addValueEventListener(new ValueEventListener() {
+                                           @Override
+                                           public void onDataChange(DataSnapshot dataSnapshot) {
+                                               Toast.makeText(MainActivity.this,"inside addValueEvent",Toast.LENGTH_SHORT).show();
+                                               mLoveNode.child(key).child("title").setValue(dataSnapshot.child("title").getValue(String.class));
+                                               mLoveNode.child(key).child("content").setValue(dataSnapshot.child("content").getValue(String.class));
+                                               mLoveNode.child(key).child("ImageUrl").setValue(dataSnapshot.child("ImageUrl").getValue(String.class));
+                                               mLoveNode.child(key).child("uid").setValue(dataSnapshot.child("uid").getValue(String.class));
+                                               mLoveNode.child(key).child("name").setValue(dataSnapshot.child("name").getValue(String.class));
+                                               mLoveNode.child(key).child("email").setValue(dataSnapshot.child("email").getValue(String.class));
+//                                               mLoveNode.child(key).child("category").setValue(dataSnapshot.child("category").getValue(String.class));
+                                           }
+
+                                           @Override
+                                           public void onCancelled(DatabaseError databaseError) {
+
+                                           }
+                                       });
+                                       mLoveNode.child(key).child("likes").child(Uid).setValue("thank you for your love");
                                        mLoved = false;
                                    }
                                }
@@ -237,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
         public void setLoves(DatabaseReference mRef){
 
             final TextView loveCount_textview = (TextView) mView.findViewById(R.id.love_count);
-            mRef.addValueEventListener(new ValueEventListener() {
+            mRef.child("likes").addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     long countLove = dataSnapshot.getChildrenCount();
@@ -259,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
 
-                    if(dataSnapshot.child(key).hasChild(Uid)){
+                    if(dataSnapshot.child(key).child("likes").hasChild(Uid)){
                         heartButton.setBackgroundResource(R.drawable.heart_filled);
                     }else{
                         heartButton.setBackgroundResource(R.drawable.heart);
