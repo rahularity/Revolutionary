@@ -22,6 +22,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
@@ -38,9 +39,9 @@ public class AddPost extends AppCompatActivity {
     private DatabaseReference mRef,mRefUser,newPost,oldPost;
     private FirebaseAuth mAuth;
     private StorageReference mStorage;
-    private Uri imageUri = null,imageUrl;
+    private Uri imageUri = null,imageUrl,resultUri;
     private ProgressDialog mProgress_save_to_database;
-    private String Uid,Name,Email;
+    private String Uid,Name,Email,key=null;
     private String titleString,contentString;
     private String mCategory = "Social";
 
@@ -49,14 +50,19 @@ public class AddPost extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_post);
 
+        key = getIntent().getStringExtra("Key");
         mProgress_save_to_database = new ProgressDialog(this);
         mRef = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
-        mStorage = FirebaseStorage.getInstance().getReference().child("blog_pics").child(randomize());
+        mStorage = FirebaseStorage.getInstance().getReference().child(randomize());
         Uid = mAuth.getCurrentUser().getUid();
         Name = mAuth.getCurrentUser().getDisplayName();
         Email = mAuth.getCurrentUser().getEmail();
         newPost = mRef.child("posts").push();
+
+
+
+
 
         title = (EditText)findViewById(R.id.title_post);
         content = (EditText)findViewById(R.id.content_post);
@@ -72,6 +78,27 @@ public class AddPost extends AppCompatActivity {
                 startActivityForResult(i, PICK_PHOTO);
             }
         });
+
+
+        if(key!=null){
+            oldPost = mRef.child("posts").child(key);
+            oldPost.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+
+                    title.setText(dataSnapshot.child("title").getValue(String.class));
+                    content.setText(dataSnapshot.child("content").getValue(String.class));
+                    String image =dataSnapshot.child("ImageUrl").getValue(String.class);
+                    Picasso.with(AddPost.this).load(image).into(post_image);
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
+
 
         save_normal.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,7 +123,18 @@ public class AddPost extends AppCompatActivity {
             public void onClick(View v) {
 //                mProgress_save_to_database.setMessage("saving data...");
 //                mProgress_save_to_database.show();
-                saveAnonymously();
+                titleString = title.getText().toString().trim();
+                contentString = content.getText().toString().trim();
+                if(titleString.length()!=0 && contentString.length()!=0) {
+
+                    mProgress_save_to_database.setMessage("saving data...");
+                    mProgress_save_to_database.show();
+                    mProgress_save_to_database.setCancelable(false);
+                    saveAnonymously();
+                }else{
+                    Toast.makeText(AddPost.this,"Please write some information before saving...",Toast.LENGTH_LONG).show();
+                }
+
             }
         });
 
@@ -107,29 +145,89 @@ public class AddPost extends AppCompatActivity {
 
     private void saveAnonymously() {
 
-        Toast.makeText(AddPost.this,"App Under construction...",Toast.LENGTH_LONG).show();
+        if(key!=null){
+            oldPost.child("title").setValue(titleString);
+            oldPost.child("content").setValue(contentString);
+            oldPost.child("uid").setValue(Uid);
+            oldPost.child("name").setValue(Name);
+            oldPost.child("email").setValue(Email);
+            oldPost.child("anonymous").setValue("true");
+            mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                    Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
+                    imageUrl = taskSnapshot.getDownloadUrl();
+                    newPost.child("ImageUrl").setValue(imageUrl.toString());
+                    mProgress_save_to_database.dismiss();
+
+                    finish();
+                }
+            });
+        }else{
+            newPost.child("title").setValue(titleString);
+            newPost.child("content").setValue(contentString);
+            newPost.child("uid").setValue(Uid);
+            newPost.child("name").setValue(Name);
+            newPost.child("email").setValue(Email);
+            newPost.child("anonymous").setValue("true");
+            mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                    Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
+                    imageUrl = taskSnapshot.getDownloadUrl();
+                    newPost.child("ImageUrl").setValue(imageUrl.toString());
+                    mProgress_save_to_database.dismiss();
+
+                    finish();
+                }
+            });
+        }
 
     }
 
     private void saveNormally() {
-        newPost.child("title").setValue(titleString);
-        newPost.child("content").setValue(contentString);
-        newPost.child("uid").setValue(Uid);
-        newPost.child("name").setValue(Name);
-        newPost.child("email").setValue(Email);
-        mStorage.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-                Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
-                imageUrl = taskSnapshot.getDownloadUrl();
-                newPost.child("ImageUrl").setValue(imageUrl.toString());
-                mProgress_save_to_database.dismiss();
+        if(key!=null){
+            oldPost.child("title").setValue(titleString);
+            oldPost.child("content").setValue(contentString);
+            oldPost.child("uid").setValue(Uid);
+            oldPost.child("name").setValue(Name);
+            oldPost.child("email").setValue(Email);
+            oldPost.child("anonymous").setValue("false");
+            mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-                finish();
-            }
-        });
+                    Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
+                    imageUrl = taskSnapshot.getDownloadUrl();
+                    newPost.child("ImageUrl").setValue(imageUrl.toString());
+                    mProgress_save_to_database.dismiss();
 
+                    finish();
+                }
+            });
+        }else{
+            newPost.child("title").setValue(titleString);
+            newPost.child("content").setValue(contentString);
+            newPost.child("uid").setValue(Uid);
+            newPost.child("name").setValue(Name);
+            newPost.child("email").setValue(Email);
+            newPost.child("anonymous").setValue("false");
+            mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                    Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
+                    imageUrl = taskSnapshot.getDownloadUrl();
+                    newPost.child("ImageUrl").setValue(imageUrl.toString());
+                    mProgress_save_to_database.dismiss();
+
+                    finish();
+                }
+            });
+        }
     }
 
     public static String randomize() {
@@ -153,14 +251,14 @@ public class AddPost extends AppCompatActivity {
             imageUri = data.getData();
             CropImage.activity(imageUri)
                     .setGuidelines(CropImageView.Guidelines.ON)
-//                    .setAspectRatio(1,1)
+                    .setAspectRatio(4,3)
                     .start(this);
         }
 
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
-                Uri resultUri = result.getUri();
+                resultUri = result.getUri();
                 post_image.setImageURI(resultUri);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();

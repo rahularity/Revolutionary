@@ -93,6 +93,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void signIn() {
+        pd.setMessage("logging in...please wait");
+        pd.show();
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -106,11 +108,12 @@ public class LoginActivity extends AppCompatActivity {
             GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             if (result.isSuccess()) {
                 // Google Sign In was successful, authenticate with Firebase
-                pd.setMessage("logging in...please wait");
-                pd.show();
                 GoogleSignInAccount account = result.getSignInAccount();
                 firebaseAuthWithGoogle(account);
             } else {
+
+                pd.dismiss();
+                Toast.makeText(LoginActivity.this,"Login Failed",Toast.LENGTH_SHORT).show();
                 // Google Sign In failed, update UI appropriately
                 // ...
             }
@@ -134,6 +137,7 @@ public class LoginActivity extends AppCompatActivity {
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
+                            pd.dismiss();
                            // updateUI(null);
                         }
 

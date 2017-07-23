@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                postsNode
        ) {
            @Override
-           protected void populateViewHolder(PostViewHolder viewHolder, Post model, int position) {
+           protected void populateViewHolder(final PostViewHolder viewHolder, Post model, int position) {
 
 
 
@@ -176,11 +176,25 @@ public class MainActivity extends AppCompatActivity {
                mLoveNode = mRef.child("loves");
                mRefLoves = mRef.child("loves").child(key);
                viewHolder.setTitle(model.getTitle());
-               //viewHolder.setImage(getApplicationContext(),model.getImageUrl());
+               viewHolder.setImage(getApplicationContext(),model.getImageUrl());
                viewHolder.setLoves(mRefLoves);
                viewHolder.setLoveButton(Uid,key);
 
 
+               mRefPosts.addValueEventListener(new ValueEventListener() {
+                   @Override
+                   public void onDataChange(DataSnapshot dataSnapshot) {
+
+                       if(dataSnapshot.child("anonymous").getValue(String.class).equals("true")){
+                           viewHolder.anonymousButton.setVisibility(View.VISIBLE);
+                       }
+
+                   }
+                   @Override
+                   public void onCancelled(DatabaseError databaseError) {
+
+                   }
+               });
 
                viewHolder.heartButton.setOnClickListener(new View.OnClickListener() {
                    @Override
@@ -198,10 +212,10 @@ public class MainActivity extends AppCompatActivity {
                                        mLoveNode.child(key).child("likes").child(Uid).removeValue();
                                        mLoved = false;
                                    }else {
+                                       mRefPosts = FirebaseDatabase.getInstance().getReference().child("posts").child(key);
                                        mRefPosts.addValueEventListener(new ValueEventListener() {
                                            @Override
                                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                               Toast.makeText(MainActivity.this,"inside addValueEvent",Toast.LENGTH_SHORT).show();
                                                mLoveNode.child(key).child("title").setValue(dataSnapshot.child("title").getValue(String.class));
                                                mLoveNode.child(key).child("content").setValue(dataSnapshot.child("content").getValue(String.class));
                                                mLoveNode.child(key).child("ImageUrl").setValue(dataSnapshot.child("ImageUrl").getValue(String.class));
@@ -210,11 +224,8 @@ public class MainActivity extends AppCompatActivity {
                                                mLoveNode.child(key).child("email").setValue(dataSnapshot.child("email").getValue(String.class));
 //                                               mLoveNode.child(key).child("category").setValue(dataSnapshot.child("category").getValue(String.class));
                                            }
-
                                            @Override
-                                           public void onCancelled(DatabaseError databaseError) {
-
-                                           }
+                                           public void onCancelled(DatabaseError databaseError) {                                           }
                                        });
                                        mLoveNode.child(key).child("likes").child(Uid).setValue("thank you for your love");
                                        mLoved = false;
@@ -233,16 +244,16 @@ public class MainActivity extends AppCompatActivity {
                });
 
 
-//                viewHolder.mView.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//
-//                        Intent intent = new Intent(MainActivity.this,InterestedAd.class);
-//                        intent.putExtra("Key",fb_key);
-//                        startActivity(intent);
-//
-//                    }
-//                });
+                viewHolder.mView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        Intent intent = new Intent(MainActivity.this,PostDisplayPageActivity.class);
+                        intent.putExtra("Key",key);
+                        startActivity(intent);
+
+                    }
+                });
            }
        };
        mPostsList.setAdapter(firebaseRecyclerAdapter);
@@ -251,13 +262,14 @@ public class MainActivity extends AppCompatActivity {
 
     private static class PostViewHolder extends RecyclerView.ViewHolder{
         View mView;
-        ImageButton heartButton;
+        ImageButton heartButton,anonymousButton;
         DatabaseReference mLoveNode;
 
         public PostViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
             heartButton = (ImageButton)mView.findViewById(R.id.heart_button);
+            anonymousButton = (ImageButton)mView.findViewById(R.id.anonymous_button);
             mLoveNode = FirebaseDatabase.getInstance().getReference().child("loves");
         }
 
@@ -273,9 +285,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
+                public void onCancelled(DatabaseError databaseError) {}
             });
 
         }
