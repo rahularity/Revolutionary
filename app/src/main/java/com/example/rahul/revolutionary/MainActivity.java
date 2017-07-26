@@ -3,10 +3,19 @@ package com.example.rahul.revolutionary;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,9 +25,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -28,32 +37,81 @@ import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
 public class MainActivity extends AppCompatActivity {
+
+    public DrawerLayout mDrawerLayout;
+    public ActionBarDrawerToggle mDrawerToggle;
+    public String[] mDrawableListItem;
     private RecyclerView mPostsList;
     boolean mLoved = false;
     String Uid;
     FirebaseAuth mAuth;
     private DatabaseReference mRefLoves,mRef,mLoveNode,mRefPosts;
     private FirebaseAuth.AuthStateListener mAuthListener;
-    private Query postsNode;
+    public Query postsNode,likedPosts;
     ProgressDialog dialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        FragmentNavigationDrawer fragment = (FragmentNavigationDrawer) getFragmentManager().findFragmentById(R.id.fragment_layout);
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+        myToolbar.setTitle(R.string.app_name);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+
+        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer);
+        mDrawableListItem = getResources().getStringArray(R.array.drawer_list);
+
+        mDrawerToggle = new ActionBarDrawerToggle(
+                this,
+                mDrawerLayout,
+                myToolbar,
+                R.string.app_name,
+                R.string.app_name
+        ){
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                super.onDrawerClosed(drawerView);
+            }
+        };
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        mDrawerLayout.post(new Runnable() {
+            @Override
+            public void run() {
+                mDrawerToggle.syncState();
+            }
+        });
+
+
+
+
 
         mRef=FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
         postsNode = FirebaseDatabase.getInstance().getReference().child("posts");
         mPostsList = (RecyclerView)findViewById(R.id.posts_list);
-        mPostsList.setLayoutManager(new LinearLayoutManager(this));
+
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(MainActivity.this);
+        mLayoutManager.setReverseLayout(true);
+        mLayoutManager.setStackFromEnd(true);
+        mPostsList.setLayoutManager(mLayoutManager);
+
 
 
         Uid = mAuth.getCurrentUser().getUid();
         dialog=new ProgressDialog(this);
 
         mAuthListener = new FirebaseAuth.AuthStateListener(){
-
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(firebaseAuth.getCurrentUser() == null){
@@ -64,7 +122,57 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, AddPost.class);
+                startActivity(intent);
+            }
+        });
+
+
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
+
+        //getting the reference of the liked posts here in likedPosts and then putting the value in postsNode for retrieving liked posts
+        DatabaseReference Node = FirebaseDatabase.getInstance().getReference().child("loves");
+        final String likesUid = "likes/"+Uid;
+
+        Node.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                likedPosts = dataSnapshot.getRef().orderByChild(likesUid).equalTo("thank you for your love");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
     }
+
+    @Override
+    public void onPostCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
+        super.onPostCreate(savedInstanceState, persistentState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -74,71 +182,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
 
-            case R.id.add_post:
-                startActivity(new Intent(MainActivity.this,AddPost.class));
-                break;
-
-            case R.id.all:
-                postsNode = FirebaseDatabase.getInstance().getReference().child("posts");
-                setTheScreen();
+            case android.R.id.home:
+                if(mDrawerLayout.isDrawerOpen(GravityCompat.START)){
+                    mDrawerLayout.closeDrawer(Gravity.LEFT);
+                }else{
+                    mDrawerLayout.openDrawer(Gravity.LEFT);
+                }
                 break;
 
             case R.id.sign_out:
                 mAuth.signOut();
                 break;
 
-            case R.id.social:
-                postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("social");
+            case R.id.myPosts:
+                postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("uid").equalTo(Uid);
                 setTheScreen();
-                Toast.makeText(MainActivity.this,"you selection is social",Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this,"you selected your posts",Toast.LENGTH_SHORT).show();
                 break;
 
-            case R.id.conversation:
-                postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("conversation");
-                setTheScreen();
-                Toast.makeText(MainActivity.this,"you selection is conversation",Toast.LENGTH_SHORT).show();
-                break;
+            case R.id.likedPosts:
 
-            case R.id.ideas:
-                postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("ideas");
-                setTheScreen();
-                Toast.makeText(MainActivity.this,"you selection is ideas",Toast.LENGTH_SHORT).show();
-                break;
-
-            case R.id.day_to_day:
-                postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("daytoday");
-                setTheScreen();
-                Toast.makeText(MainActivity.this,"you selection is Day To Day",Toast.LENGTH_SHORT).show();
-                break;
-
-            case R.id.life_style:
-                postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("lifestyle");
-                setTheScreen();
-                Toast.makeText(MainActivity.this,"you selection is Life Style",Toast.LENGTH_SHORT).show();
-                break;
-
-            case R.id.liked_posts:
-                DatabaseReference Node = FirebaseDatabase.getInstance().getReference().child("loves");
-                final String likesUid = "likes/"+Uid;
-                Node.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        postsNode = dataSnapshot.getRef().orderByChild(likesUid).equalTo("thank you for your love");
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
+                postsNode = likedPosts;
                 setTheScreen();
                 Toast.makeText(MainActivity.this,"you selection is Liked Pages",Toast.LENGTH_SHORT).show();
-
                 break;
 
 
@@ -155,10 +227,36 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+        postsNode = FirebaseDatabase.getInstance().getReference().child("posts");
         setTheScreen();
     }
 
-   private void setTheScreen(){
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
+    }
+
+    public void setTheScreen(){
        FirebaseRecyclerAdapter<Post,PostViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post,PostViewHolder>(
                Post.class,
                R.layout.post_display_blueprint,
@@ -167,11 +265,7 @@ public class MainActivity extends AppCompatActivity {
        ) {
            @Override
            protected void populateViewHolder(final PostViewHolder viewHolder, Post model, int position) {
-
-
-
                final String key = getRef(position).getKey();
-
                mRefPosts = FirebaseDatabase.getInstance().getReference().child("posts").child(key);
                mLoveNode = mRef.child("loves");
                mRefLoves = mRef.child("loves").child(key);
@@ -185,7 +279,8 @@ public class MainActivity extends AppCompatActivity {
                    @Override
                    public void onDataChange(DataSnapshot dataSnapshot) {
 
-                       if(dataSnapshot.child("anonymous").getValue(String.class).equals("true")){
+                       String isAnonymous = dataSnapshot.child("anonymous").getValue(String.class);
+                       if (isAnonymous != null && isAnonymous.equals("true")) {
                            viewHolder.anonymousButton.setVisibility(View.VISIBLE);
                        }
 
@@ -317,7 +412,7 @@ public class MainActivity extends AppCompatActivity {
 
         private void setImage(Context ctx,String imageUrl){
             ImageView post_image = (ImageView)mView.findViewById(R.id.blog_image);
-            Picasso.with(ctx).load(imageUrl).into(post_image);
+            Picasso.with(ctx).load(imageUrl).fit().centerCrop().into(post_image);
         }
 
     }

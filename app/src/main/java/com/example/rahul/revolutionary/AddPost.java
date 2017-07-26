@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,6 +20,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -37,13 +40,16 @@ public class AddPost extends AppCompatActivity {
     private Spinner category;
     private Button save_normal,save_anonymous;
     private DatabaseReference mRef,mRefUser,newPost,oldPost;
+    private StorageReference mPicReference;
+    private FirebaseStorage mFirebaseStorage;
     private FirebaseAuth mAuth;
     private StorageReference mStorage;
-    private Uri imageUri = null,imageUrl,resultUri;
+    private Uri imageUri = null,imageUrl,resultUri=null;
     private ProgressDialog mProgress_save_to_database;
-    private String Uid,Name,Email,key=null;
+    private String Uid,Name,Email,key=null,image;
     private String titleString,contentString;
-    private String mCategory = "Social";
+    private ArrayAdapter<CharSequence> adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +58,7 @@ public class AddPost extends AppCompatActivity {
 
         key = getIntent().getStringExtra("Key");
         mProgress_save_to_database = new ProgressDialog(this);
+        mFirebaseStorage = FirebaseStorage.getInstance();
         mRef = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
         mStorage = FirebaseStorage.getInstance().getReference().child(randomize());
@@ -61,12 +68,18 @@ public class AddPost extends AppCompatActivity {
         newPost = mRef.child("posts").push();
 
 
+        category = (Spinner)findViewById(R.id.category);
+        adapter = ArrayAdapter.createFromResource(this,R.array.category_list,android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        category.setAdapter(adapter);
+
+
 
 
 
         title = (EditText)findViewById(R.id.title_post);
+        title.setFilters(new InputFilter[] {new InputFilter.AllCaps()});
         content = (EditText)findViewById(R.id.content_post);
-        category = (Spinner)findViewById(R.id.category);
         save_anonymous = (Button)findViewById(R.id.anonymous_post);
         save_normal = (Button)findViewById(R.id.yourself_post);
         post_image = (ImageView)findViewById(R.id.post_image);
@@ -86,11 +99,13 @@ public class AddPost extends AppCompatActivity {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
 
+
                     title.setText(dataSnapshot.child("title").getValue(String.class));
                     content.setText(dataSnapshot.child("content").getValue(String.class));
-                    String image =dataSnapshot.child("ImageUrl").getValue(String.class);
-                    Picasso.with(AddPost.this).load(image).into(post_image);
-
+                    image =dataSnapshot.child("ImageUrl").getValue(String.class);
+                    int position = adapter.getPosition(dataSnapshot.child("category").getValue(String.class));
+                    category.setSelection(position);
+                    Picasso.with(AddPost.this).load(image).fit().centerCrop().into(post_image);
                 }
 
                 @Override
@@ -141,8 +156,6 @@ public class AddPost extends AppCompatActivity {
     }
 
 
-
-
     private void saveAnonymously() {
 
         if(key!=null){
@@ -152,18 +165,30 @@ public class AddPost extends AppCompatActivity {
             oldPost.child("name").setValue(Name);
             oldPost.child("email").setValue(Email);
             oldPost.child("anonymous").setValue("true");
-            mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+            if(resultUri!=null){
 
-                    Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
-                    imageUrl = taskSnapshot.getDownloadUrl();
-                    newPost.child("ImageUrl").setValue(imageUrl.toString());
-                    mProgress_save_to_database.dismiss();
+                mPicReference = mFirebaseStorage.getReferenceFromUrl(image);
+                mPicReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {}
+                });
 
-                    finish();
-                }
-            });
+                mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                        Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
+                        imageUrl = taskSnapshot.getDownloadUrl();
+                        oldPost.child("ImageUrl").setValue(imageUrl.toString());
+                        mProgress_save_to_database.dismiss();
+
+                        finish();
+                    }
+                });
+            }else{
+                oldPost.child("ImageUrl").setValue(image);
+                finish();
+            }
         }else{
             newPost.child("title").setValue(titleString);
             newPost.child("content").setValue(contentString);
@@ -171,6 +196,7 @@ public class AddPost extends AppCompatActivity {
             newPost.child("name").setValue(Name);
             newPost.child("email").setValue(Email);
             newPost.child("anonymous").setValue("true");
+            newPost.child("time").setValue(ServerValue.TIMESTAMP);
             mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -196,18 +222,32 @@ public class AddPost extends AppCompatActivity {
             oldPost.child("name").setValue(Name);
             oldPost.child("email").setValue(Email);
             oldPost.child("anonymous").setValue("false");
-            mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
 
-                    Toast.makeText(AddPost.this,"upload done",Toast.LENGTH_LONG).show();
-                    imageUrl = taskSnapshot.getDownloadUrl();
-                    newPost.child("ImageUrl").setValue(imageUrl.toString());
-                    mProgress_save_to_database.dismiss();
+            if(resultUri!=null) {
 
-                    finish();
-                }
-            });
+                mPicReference = mFirebaseStorage.getReferenceFromUrl(image);
+                mPicReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {}
+                });
+
+                mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                        Toast.makeText(AddPost.this, "upload done", Toast.LENGTH_LONG).show();
+                        imageUrl = taskSnapshot.getDownloadUrl();
+                        oldPost.child("ImageUrl").setValue(imageUrl.toString());
+                        mProgress_save_to_database.dismiss();
+
+                        finish();
+                    }
+                });
+            }else{
+                oldPost.child("ImageUrl").setValue(image);
+                finish();
+            }
+
         }else{
             newPost.child("title").setValue(titleString);
             newPost.child("content").setValue(contentString);
@@ -265,4 +305,5 @@ public class AddPost extends AppCompatActivity {
             }
         }
     }
+
 }

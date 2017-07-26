@@ -110,6 +110,15 @@ public class PostDisplayPageActivity extends AppCompatActivity {
         showPost();
         setLoveButton(Uid,key);
 
+
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+
     }
 
     private void editPost() {
@@ -170,19 +179,22 @@ public class PostDisplayPageActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                if(dataSnapshot.child("anonymous").getValue(String.class).equals("true")){
-                    title.setText(dataSnapshot.child("title").getValue(String.class));
-                    authorEmail.setText("Anonymous");
-                    authorName.setText("Anonymous");
-                    content.setText(dataSnapshot.child("content").getValue(String.class));
-                    Picasso.with(PostDisplayPageActivity.this).load(dataSnapshot.child("ImageUrl").getValue(String.class)).into(postImage);
+                String anonymousValue = dataSnapshot.child("anonymous").getValue(String.class);
+                if (anonymousValue != null) {
+                    if(anonymousValue.equals("true")){
+                        title.setText(dataSnapshot.child("title").getValue(String.class));
+                        authorEmail.setText("Anonymous@anonym.ous");
+                        authorName.setText("Anonymous");
+                        content.setText(dataSnapshot.child("content").getValue(String.class));
+                        Picasso.with(PostDisplayPageActivity.this).load(dataSnapshot.child("ImageUrl").getValue(String.class)).into(postImage);
 
-                }else{
-                    title.setText(dataSnapshot.child("title").getValue(String.class));
-                    authorEmail.setText(dataSnapshot.child("email").getValue(String.class));
-                    authorName.setText(dataSnapshot.child("name").getValue(String.class));
-                    content.setText(dataSnapshot.child("content").getValue(String.class));
-                    Picasso.with(PostDisplayPageActivity.this).load(dataSnapshot.child("ImageUrl").getValue(String.class)).into(postImage);
+                    }else{
+                        title.setText(dataSnapshot.child("title").getValue(String.class));
+                        authorEmail.setText(dataSnapshot.child("email").getValue(String.class));
+                        authorName.setText(dataSnapshot.child("name").getValue(String.class));
+                        content.setText(dataSnapshot.child("content").getValue(String.class));
+                        Picasso.with(PostDisplayPageActivity.this).load(dataSnapshot.child("ImageUrl").getValue(String.class)).fit().into(postImage);
+                    }
                 }
 
 
@@ -211,4 +223,21 @@ public class PostDisplayPageActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    }
 }

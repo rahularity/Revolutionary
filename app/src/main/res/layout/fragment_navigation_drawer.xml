@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+<LinearLayout
+    android:id="@+id/fragment_layout"
+    android:layout_width="match_parent"
+    android:background="#000000"
+    android:clickable="true"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="25dp"
+        android:layout_gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/all"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="All"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+        <TextView
+            android:id="@+id/social"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Social"
+            android:textColor="#ffffff"
+            android:textStyle="bold"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+        <TextView
+            android:id="@+id/fashion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Fashion"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+        <TextView
+            android:id="@+id/thoughts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Thoughts"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+        <TextView
+            android:id="@+id/food"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Food"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+        <TextView
+            android:id="@+id/lifeStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Life Style"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+        <TextView
+            android:id="@+id/experiences"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Experiences"
+            android:textStyle="bold"
+            android:textColor="#ffffff"
+            android:layout_margin="10dp"
+            android:textSize="32sp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
+
+
+
+</LinearLayout>

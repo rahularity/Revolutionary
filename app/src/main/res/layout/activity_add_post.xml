@@ -2,8 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="5dp"
+    android:layout_height="wrap_content"
+    android:padding="5dp"
+    android:background="#000000"
     tools:context="com.example.rahul.revolutionary.AddPost">
 
     <TextView
@@ -12,7 +13,9 @@
         android:layout_height="wrap_content"
         android:textStyle="bold|italic"
         android:textSize="21sp"
-        android:textColor="#000000"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="5dp"
+        android:textColor="#ffffff"
         android:textAlignment="center"
         android:text="ADD A NEW POST" />
 
@@ -26,36 +29,46 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_margin="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
             android:id="@+id/linearLayout">
-
-            <ImageView
-                android:id="@+id/post_image"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/add_btn"
-                android:layout_marginBottom="10dp"/>
 
             <EditText
                 android:id="@+id/title_post"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="TITLE OF THE POST"
+                android:hint="TITLE"
                 android:layout_marginBottom="10dp"
+                android:background="@drawable/textview_background"
+                android:padding="10dp"
                 android:textAlignment="center"/>
+
+            <ImageView
+                android:id="@+id/post_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/add_btn" />
+
 
             <EditText
                 android:id="@+id/content_post"
                 android:layout_width="match_parent"
                 android:layout_height="178dp"
-                android:hint="Content of your post"
+                android:hint="Content"
+                android:background="@drawable/textview_background"
+                android:padding="10dp"
                 android:textAlignment="center"
                 android:inputType="textMultiLine"
                 android:layout_marginBottom="10sp"/>
 
             <Spinner
                 android:id="@+id/category"
+                android:background="@drawable/textview_background"
                 android:layout_width="match_parent"
+                android:padding="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_height="wrap_content"
                 android:textAlignment="center" />
 
@@ -69,6 +82,8 @@
     <LinearLayout
         android:id="@+id/submit_buttons"
         android:layout_alignParentBottom="true"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -77,6 +92,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:background="@drawable/button_background"
+            android:padding="5dp"
+            android:layout_marginEnd="1dp"
+            android:textColor="#000000"
             android:text="Post as yourself" />
 
         <Button
@@ -84,6 +103,10 @@
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="1dp"
+            android:background="@drawable/button_background"
+            android:padding="5dp"
+            android:textColor="#000000"
             android:text="Post Anonymously" />
     </LinearLayout>
 
