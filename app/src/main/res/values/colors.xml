@@ -4,4 +4,11 @@
     <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#000000</color>
     <color name="background">#3b5998</color>
+    <color name="white">#ffffff</color>
+    <color name="grayShade1">#F2F3F4</color>
+    <color name="grayShade2">#DADEDF</color>
+    <color name="grayShade3">#C1C7C9</color>
+    <color name="grayShade4">#A7B0B2</color>
+    <color name="grayShade5">#8C979A</color>
+    <color name="navigationDrawerText">#ffffff</color>
 </resources>

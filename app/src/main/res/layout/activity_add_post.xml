@@ -55,7 +55,7 @@
             <EditText
                 android:id="@+id/content_post"
                 android:layout_width="match_parent"
-                android:layout_height="178dp"
+                android:layout_height="200dp"
                 android:hint="Content"
                 android:background="@drawable/textview_background"
                 android:padding="10dp"

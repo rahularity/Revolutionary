@@ -21,6 +21,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -36,8 +38,11 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
+import java.util.Random;
+
 public class MainActivity extends AppCompatActivity {
 
+    private static final int MAX_LENGTH = 20;
     public DrawerLayout mDrawerLayout;
     public ActionBarDrawerToggle mDrawerToggle;
     public String[] mDrawableListItem;
@@ -52,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
         FragmentNavigationDrawer fragment = (FragmentNavigationDrawer) getFragmentManager().findFragmentById(R.id.fragment_layout);
@@ -61,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
         myToolbar.setTitle(R.string.app_name);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-
 
         mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer);
         mDrawableListItem = getResources().getStringArray(R.array.drawer_list);
@@ -96,6 +102,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+        dialog=new ProgressDialog(this);
+        dialog.setMessage("please wait while the content is loading...");
+        dialog.show();
+        dialog.setCancelable(false);
         mRef=FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
         postsNode = FirebaseDatabase.getInstance().getReference().child("posts");
@@ -109,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         Uid = mAuth.getCurrentUser().getUid();
-        dialog=new ProgressDialog(this);
+
 
         mAuthListener = new FirebaseAuth.AuthStateListener(){
             @Override
@@ -131,15 +141,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
 
         //getting the reference of the liked posts here in likedPosts and then putting the value in postsNode for retrieving liked posts
@@ -188,6 +189,11 @@ public class MainActivity extends AppCompatActivity {
 
         switch (item.getItemId()) {
 
+            case R.id.myAccount:
+                startActivity(new Intent(MainActivity.this,AboutMe.class));
+                break;
+
+
             case android.R.id.home:
                 if(mDrawerLayout.isDrawerOpen(GravityCompat.START)){
                     mDrawerLayout.closeDrawer(Gravity.LEFT);
@@ -231,32 +237,10 @@ public class MainActivity extends AppCompatActivity {
         setTheScreen();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
-    }
 
     public void setTheScreen(){
+        dialog.dismiss();
        FirebaseRecyclerAdapter<Post,PostViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post,PostViewHolder>(
                Post.class,
                R.layout.post_display_blueprint,
@@ -270,9 +254,9 @@ public class MainActivity extends AppCompatActivity {
                mLoveNode = mRef.child("loves");
                mRefLoves = mRef.child("loves").child(key);
                viewHolder.setTitle(model.getTitle());
-               viewHolder.setImage(getApplicationContext(),model.getImageUrl());
                viewHolder.setLoves(mRefLoves);
                viewHolder.setLoveButton(Uid,key);
+               viewHolder.setImage(getApplicationContext(),model.getImageUrl());
 
 
                mRefPosts.addValueEventListener(new ValueEventListener() {
@@ -317,7 +301,8 @@ public class MainActivity extends AppCompatActivity {
                                                mLoveNode.child(key).child("uid").setValue(dataSnapshot.child("uid").getValue(String.class));
                                                mLoveNode.child(key).child("name").setValue(dataSnapshot.child("name").getValue(String.class));
                                                mLoveNode.child(key).child("email").setValue(dataSnapshot.child("email").getValue(String.class));
-//                                               mLoveNode.child(key).child("category").setValue(dataSnapshot.child("category").getValue(String.class));
+                                               mLoveNode.child(key).child("randomId").setValue(randomize());
+                                               mLoveNode.child(key).child("category").setValue(dataSnapshot.child("category").getValue(String.class));
                                            }
                                            @Override
                                            public void onCancelled(DatabaseError databaseError) {                                           }
@@ -415,6 +400,19 @@ public class MainActivity extends AppCompatActivity {
             Picasso.with(ctx).load(imageUrl).fit().centerCrop().into(post_image);
         }
 
+    }
+
+
+    public static String randomize() {
+        Random generator = new Random();
+        StringBuilder randomStringBuilder = new StringBuilder();
+        int randomLength = generator.nextInt(MAX_LENGTH);
+        char tempChar;
+        for (int i = 0; i < randomLength; i++){
+            tempChar = (char) (generator.nextInt(96) + 32);
+            randomStringBuilder.append(tempChar);
+        }
+        return randomStringBuilder.toString();
     }
 
 

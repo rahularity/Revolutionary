@@ -24,7 +24,7 @@ import org.w3c.dom.Text;
 
 public class FragmentNavigationDrawer extends Fragment {
 
-    TextView social,fashion,thoughts,food,lifestyle,experiences,all;
+    TextView social,fashion,thoughts,food,lifestyle,experiences,all,random,nature;
     FirebaseAuth mAuth;
     Query mRefMyPosts;
 
@@ -43,12 +43,16 @@ public class FragmentNavigationDrawer extends Fragment {
     public void onViewCreated(View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         all = (TextView)view.findViewById(R.id.all);
+        random = (TextView)view.findViewById(R.id.random);
+        nature = (TextView)view.findViewById(R.id.nature);
         social = (TextView)view.findViewById(R.id.social);
         fashion = (TextView)view.findViewById(R.id.fashion);
         food = (TextView)view.findViewById(R.id.food);
         thoughts = (TextView)view.findViewById(R.id.thoughts);
         lifestyle = (TextView)view.findViewById(R.id.lifeStyle);
         experiences = (TextView)view.findViewById(R.id.experiences);
+
+
 
 
         all.setOnClickListener(new View.OnClickListener() {
@@ -62,11 +66,33 @@ public class FragmentNavigationDrawer extends Fragment {
             }
         });
 
+        random.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("loves").orderByChild("randomId");
+                ((MainActivity)getActivity()).setTheScreen();
+                ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
+
+            }
+        });
+
+        nature.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("Nature");
+                ((MainActivity)getActivity()).setTheScreen();
+                ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
+
+            }
+        });
+
         social.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("social");
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("Social");
                 ((MainActivity)getActivity()).setTheScreen();
                 ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
 
@@ -77,7 +103,7 @@ public class FragmentNavigationDrawer extends Fragment {
             @Override
             public void onClick(View v) {
 
-                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("fashion");
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("Fashion");
                 ((MainActivity)getActivity()).setTheScreen();
                 ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
 
@@ -88,7 +114,7 @@ public class FragmentNavigationDrawer extends Fragment {
             @Override
             public void onClick(View v) {
 
-                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("thoughts");
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("Thoughts");
                 ((MainActivity)getActivity()).setTheScreen();
                 ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
 
@@ -99,7 +125,7 @@ public class FragmentNavigationDrawer extends Fragment {
             @Override
             public void onClick(View v) {
 
-                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("food");
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("Food");
                 ((MainActivity)getActivity()).setTheScreen();
                 ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
 
@@ -110,7 +136,7 @@ public class FragmentNavigationDrawer extends Fragment {
             @Override
             public void onClick(View v) {
 
-                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("lifestyle");
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("LifeStyle");
                 ((MainActivity)getActivity()).setTheScreen();
                 ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
 
@@ -121,7 +147,7 @@ public class FragmentNavigationDrawer extends Fragment {
             @Override
             public void onClick(View v) {
 
-                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("experiences");
+                ((MainActivity)getActivity()).postsNode = FirebaseDatabase.getInstance().getReference().child("posts").orderByChild("category").equalTo("Experiences");
                 ((MainActivity)getActivity()).setTheScreen();
                 ((MainActivity)getActivity()).mDrawerLayout.closeDrawer(Gravity.LEFT);
 

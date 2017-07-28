@@ -6,7 +6,10 @@ import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.InputFilter;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -39,14 +42,14 @@ public class AddPost extends AppCompatActivity {
     private EditText title,content;
     private Spinner category;
     private Button save_normal,save_anonymous;
-    private DatabaseReference mRef,mRefUser,newPost,oldPost;
+    private DatabaseReference mRef,newPost,oldPost;
     private StorageReference mPicReference;
     private FirebaseStorage mFirebaseStorage;
     private FirebaseAuth mAuth;
     private StorageReference mStorage;
     private Uri imageUri = null,imageUrl,resultUri=null;
     private ProgressDialog mProgress_save_to_database;
-    private String Uid,Name,Email,key=null,image;
+    private String Uid,Name,Email,key=null,image,category_from_spinner;
     private String titleString,contentString;
     private ArrayAdapter<CharSequence> adapter;
 
@@ -61,7 +64,7 @@ public class AddPost extends AppCompatActivity {
         mFirebaseStorage = FirebaseStorage.getInstance();
         mRef = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
-        mStorage = FirebaseStorage.getInstance().getReference().child(randomize());
+        mStorage = FirebaseStorage.getInstance().getReference().child("posts_images").child(randomize());
         Uid = mAuth.getCurrentUser().getUid();
         Name = mAuth.getCurrentUser().getDisplayName();
         Email = mAuth.getCurrentUser().getEmail();
@@ -89,6 +92,20 @@ public class AddPost extends AppCompatActivity {
                 Intent i = new Intent(Intent.ACTION_PICK);
                 i.setType("image/*");
                 startActivityForResult(i, PICK_PHOTO);
+            }
+        });
+
+        content.setOnTouchListener(new View.OnTouchListener() {
+
+            public boolean onTouch(View v, MotionEvent event) {
+
+                v.getParent().requestDisallowInterceptTouchEvent(true);
+                switch (event.getAction() & MotionEvent.ACTION_MASK){
+                    case MotionEvent.ACTION_UP:
+                        v.getParent().requestDisallowInterceptTouchEvent(false);
+                        break;
+                }
+                return false;
             }
         });
 
@@ -121,6 +138,7 @@ public class AddPost extends AppCompatActivity {
 
                 titleString = title.getText().toString().trim();
                 contentString = content.getText().toString().trim();
+                category_from_spinner = category.getSelectedItem().toString();
                 if(titleString.length()!=0 && contentString.length()!=0) {
 
                     mProgress_save_to_database.setMessage("saving data...");
@@ -140,6 +158,7 @@ public class AddPost extends AppCompatActivity {
 //                mProgress_save_to_database.show();
                 titleString = title.getText().toString().trim();
                 contentString = content.getText().toString().trim();
+                category_from_spinner = category.getSelectedItem().toString();
                 if(titleString.length()!=0 && contentString.length()!=0) {
 
                     mProgress_save_to_database.setMessage("saving data...");
@@ -165,6 +184,8 @@ public class AddPost extends AppCompatActivity {
             oldPost.child("name").setValue(Name);
             oldPost.child("email").setValue(Email);
             oldPost.child("anonymous").setValue("true");
+            oldPost.child("category").setValue(category_from_spinner);
+            oldPost.child("time").setValue(ServerValue.TIMESTAMP);
             if(resultUri!=null){
 
                 mPicReference = mFirebaseStorage.getReferenceFromUrl(image);
@@ -196,6 +217,7 @@ public class AddPost extends AppCompatActivity {
             newPost.child("name").setValue(Name);
             newPost.child("email").setValue(Email);
             newPost.child("anonymous").setValue("true");
+            newPost.child("category").setValue(category_from_spinner);
             newPost.child("time").setValue(ServerValue.TIMESTAMP);
             mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -222,6 +244,8 @@ public class AddPost extends AppCompatActivity {
             oldPost.child("name").setValue(Name);
             oldPost.child("email").setValue(Email);
             oldPost.child("anonymous").setValue("false");
+            oldPost.child("category").setValue(category_from_spinner);
+            oldPost.child("time").setValue(ServerValue.TIMESTAMP);
 
             if(resultUri!=null) {
 
@@ -255,6 +279,8 @@ public class AddPost extends AppCompatActivity {
             newPost.child("name").setValue(Name);
             newPost.child("email").setValue(Email);
             newPost.child("anonymous").setValue("false");
+            newPost.child("category").setValue(category_from_spinner);
+            newPost.child("time").setValue(ServerValue.TIMESTAMP);
             mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {

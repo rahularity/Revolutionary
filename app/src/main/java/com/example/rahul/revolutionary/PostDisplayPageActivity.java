@@ -1,11 +1,18 @@
 package com.example.rahul.revolutionary;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,30 +30,47 @@ import com.squareup.picasso.Picasso;
 
 public class PostDisplayPageActivity extends AppCompatActivity {
 
-    private TextView title,authorName,authorEmail,content;
+    private TextView title,content;
     private ImageButton edit,delete,love;
     private ImageView postImage;
-    private DatabaseReference mPostRef,mLoveRef,mRef;
+    private DatabaseReference mPostRef,mLoveRef,mRef,userRef;
     private StorageReference mPicReference;
     private FirebaseStorage mFirebaseStorage;
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private String key = null,Uid,photoUrl;
+    private String key = null,Uid,photoUrl,authorUid,profPic,isAnonymous;
     private boolean mLoved = false;
+    private ImageButton authorDetails;
+    private Dialog dialog,dialogAnonymous,dialogDelete;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_post_display_page);
 
+
+
+        dialogDelete = new Dialog(this);
+        dialogDelete.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialogDelete.setContentView(R.layout.delete_dialog_layout);
+        dialogAnonymous = new Dialog(this);
+        dialogAnonymous.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialogAnonymous.setContentView(R.layout.anonymous_dialog);
+        dialog = new Dialog(this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.user_detail_dialog);
+
+
         title = (TextView)findViewById(R.id.title);
-        authorName = (TextView)findViewById(R.id.author_name);
-        authorEmail = (TextView)findViewById(R.id.author_email);
         content = (TextView)findViewById(R.id.content);
         edit = (ImageButton)findViewById(R.id.edit_button);
         delete = (ImageButton)findViewById(R.id.delete_button);
         love = (ImageButton)findViewById(R.id.love_button);
         postImage = (ImageView)findViewById(R.id.image_post);
+        authorDetails = (ImageButton) findViewById(R.id.info);
 
         key = getIntent().getStringExtra("Key");
         mAuth = FirebaseAuth.getInstance();
@@ -55,10 +79,25 @@ public class PostDisplayPageActivity extends AppCompatActivity {
             Uid = currentUser.getUid();
         }
 
+
         mFirebaseStorage = FirebaseStorage.getInstance();
         mLoveRef = FirebaseDatabase.getInstance().getReference().child("loves");
         mPostRef = FirebaseDatabase.getInstance().getReference().child("posts").child(key);
         mRef = FirebaseDatabase.getInstance().getReference().child("posts");
+        userRef = FirebaseDatabase.getInstance().getReference().child("users");
+
+        mPostRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                authorUid = dataSnapshot.child("uid").getValue(String.class);
+                isAnonymous = dataSnapshot.child("anonymous").getValue(String.class);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         mRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -85,18 +124,40 @@ public class PostDisplayPageActivity extends AppCompatActivity {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPostRef.removeValue();
-                mLoveRef.child(key).removeValue();
-                mPicReference = mFirebaseStorage.getReferenceFromUrl(photoUrl);
-                mPicReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+
+                dialogDelete.show();
+
+                TextView cancel,delete;
+                delete = (TextView)dialogDelete.findViewById(R.id.delete);
+                cancel = (TextView)dialogDelete.findViewById(R.id.cancel);
+
+                delete.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(PostDisplayPageActivity.this,"deleted successfully",Toast.LENGTH_SHORT).show();
+                    public void onClick(View v) {
+                        mPostRef.removeValue();
+                        mLoveRef.child(key).removeValue();
+                        mPicReference = mFirebaseStorage.getReferenceFromUrl(photoUrl);
+                        mPicReference.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(PostDisplayPageActivity.this,"deleted successfully",Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        finish();
+                        Intent mainActivity = new Intent(PostDisplayPageActivity.this,MainActivity.class);
+                        startActivity(mainActivity);
                     }
                 });
-                finish();
-                Intent mainActivity = new Intent(PostDisplayPageActivity.this,MainActivity.class);
-                startActivity(mainActivity);
+
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialogDelete.dismiss();
+                    }
+                });
+
+
+
             }
         });
 
@@ -111,15 +172,103 @@ public class PostDisplayPageActivity extends AppCompatActivity {
         setLoveButton(Uid,key);
 
 
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
+
+
+        authorDetails.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPostAuthorDetail();
+            }
+        });
 
     }
+
+    private void showPostAuthorDetail() {
+
+        if(isAnonymous.equals("false")){
+            final TextView website,about,name,email;
+            name = (TextView)dialog.findViewById(R.id.name);
+            email = (TextView)dialog.findViewById(R.id.email);
+            about = (TextView)dialog.findViewById(R.id.about);
+            website = (TextView)dialog.findViewById(R.id.website);
+
+            final LinearLayout aboutSection,websiteSection;
+            aboutSection = (LinearLayout)dialog.findViewById(R.id.about_section);
+            websiteSection = (LinearLayout)dialog.findViewById(R.id.website_section);
+
+            final ImageView profilePic = (ImageView)dialog.findViewById(R.id.profile_pic);
+
+            ImageButton close = (ImageButton)dialog.findViewById(R.id.close);
+
+            DatabaseReference theAuthor = userRef.child(authorUid);
+            theAuthor.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    name.setText(dataSnapshot.child("userName").getValue(String.class));
+                    email.setText(dataSnapshot.child("userEmail").getValue(String.class));
+                    about.setText(dataSnapshot.child("about").getValue(String.class));
+                    website.setText(dataSnapshot.child("website").getValue(String.class));
+                    profPic = dataSnapshot.child("profilePic").getValue(String.class);
+
+                    if(name.length()==0){
+
+                        name.setText(mAuth.getCurrentUser().getDisplayName());
+                        email.setText(mAuth.getCurrentUser().getEmail());
+                        String photo = mAuth.getCurrentUser().getPhotoUrl().toString();
+                        if(photo !=null){
+                            Picasso.with(PostDisplayPageActivity.this).load(photo).into(profilePic);
+                        }
+
+                    }else {
+                        if (about.length()!=0){
+                            aboutSection.setVisibility(View.VISIBLE);
+                        }
+                        if (website.length()!=0){
+                            websiteSection.setVisibility(View.VISIBLE);
+                        }
+                        if (profPic.length()==0){
+                            String photo = mAuth.getCurrentUser().getPhotoUrl().toString();
+                            if (photo!=null){
+                                Picasso.with(PostDisplayPageActivity.this).load(photo).into(profilePic);
+                            }
+                        }else {
+                            Picasso.with(PostDisplayPageActivity.this).load(profPic).into(profilePic);
+
+                        }
+                    }
+                }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            dialog.show();
+
+            close.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                }
+            });
+        }else {
+            ImageButton close = (ImageButton)dialogAnonymous.findViewById(R.id.close);
+            dialogAnonymous.show();
+            close.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialogAnonymous.dismiss();
+                }
+            });
+
+        }
+
+
+    }
+
 
     private void editPost() {
 
@@ -183,15 +332,11 @@ public class PostDisplayPageActivity extends AppCompatActivity {
                 if (anonymousValue != null) {
                     if(anonymousValue.equals("true")){
                         title.setText(dataSnapshot.child("title").getValue(String.class));
-                        authorEmail.setText("Anonymous@anonym.ous");
-                        authorName.setText("Anonymous");
                         content.setText(dataSnapshot.child("content").getValue(String.class));
                         Picasso.with(PostDisplayPageActivity.this).load(dataSnapshot.child("ImageUrl").getValue(String.class)).into(postImage);
 
                     }else{
                         title.setText(dataSnapshot.child("title").getValue(String.class));
-                        authorEmail.setText(dataSnapshot.child("email").getValue(String.class));
-                        authorName.setText(dataSnapshot.child("name").getValue(String.class));
                         content.setText(dataSnapshot.child("content").getValue(String.class));
                         Picasso.with(PostDisplayPageActivity.this).load(dataSnapshot.child("ImageUrl").getValue(String.class)).fit().into(postImage);
                     }
@@ -229,15 +374,5 @@ public class PostDisplayPageActivity extends AppCompatActivity {
         finish();
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-    }
+
 }
