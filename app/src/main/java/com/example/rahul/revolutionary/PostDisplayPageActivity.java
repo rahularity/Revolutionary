@@ -16,6 +16,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.auth.ui.User;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -28,8 +29,11 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+import java.util.Random;
+
 public class PostDisplayPageActivity extends AppCompatActivity {
 
+    private static final int MAX_LENGTH = 20;
     private TextView title,content;
     private ImageButton edit,delete,love;
     private ImageView postImage;
@@ -213,39 +217,19 @@ public class PostDisplayPageActivity extends AppCompatActivity {
                     website.setText(dataSnapshot.child("website").getValue(String.class));
                     profPic = dataSnapshot.child("profilePic").getValue(String.class);
 
-                    if(name.length()==0){
-
-                        name.setText(mAuth.getCurrentUser().getDisplayName());
-                        email.setText(mAuth.getCurrentUser().getEmail());
-                        String photo = mAuth.getCurrentUser().getPhotoUrl().toString();
-                        if(photo !=null){
-                            Picasso.with(PostDisplayPageActivity.this).load(photo).into(profilePic);
-                        }
-
-                    }else {
                         if (about.length()!=0){
                             aboutSection.setVisibility(View.VISIBLE);
                         }
                         if (website.length()!=0){
                             websiteSection.setVisibility(View.VISIBLE);
                         }
-                        if (profPic.length()==0){
-                            String photo = mAuth.getCurrentUser().getPhotoUrl().toString();
-                            if (photo!=null){
-                                Picasso.with(PostDisplayPageActivity.this).load(photo).into(profilePic);
-                            }
-                        }else {
+                        if (profPic.length()!=0){
                             Picasso.with(PostDisplayPageActivity.this).load(profPic).into(profilePic);
-
                         }
                     }
-                }
                 @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
+                public void onCancelled(DatabaseError databaseError) {}
             });
-
             dialog.show();
 
             close.setOnClickListener(new View.OnClickListener() {
@@ -300,7 +284,8 @@ public class PostDisplayPageActivity extends AppCompatActivity {
                                 mLoveRef.child(key).child("uid").setValue(dataSnapshot.child("uid").getValue(String.class));
                                 mLoveRef.child(key).child("name").setValue(dataSnapshot.child("name").getValue(String.class));
                                 mLoveRef.child(key).child("email").setValue(dataSnapshot.child("email").getValue(String.class));
-//                                               mLoveNode.child(key).child("category").setValue(dataSnapshot.child("category").getValue(String.class));
+                                mLoveRef.child(key).child("category").setValue(dataSnapshot.child("category").getValue(String.class));
+                                mLoveRef.child(key).child("randomId").setValue(randomize());
                             }
 
                             @Override
@@ -368,11 +353,25 @@ public class PostDisplayPageActivity extends AppCompatActivity {
         });
     }
 
+    public static String randomize() {
+        Random generator = new Random();
+        StringBuilder randomStringBuilder = new StringBuilder();
+        int randomLength = generator.nextInt(MAX_LENGTH);
+        char tempChar;
+        for (int i = 0; i < randomLength; i++){
+            tempChar = (char) (generator.nextInt(96) + 32);
+            randomStringBuilder.append(tempChar);
+        }
+        return randomStringBuilder.toString();
+    }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
         finish();
     }
+
+
 
 
 }

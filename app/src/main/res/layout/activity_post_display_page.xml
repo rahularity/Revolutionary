@@ -44,7 +44,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/edit4"
             android:layout_margin="5dp"
-            android:visibility="visible"/>
+            android:visibility="invisible"/>
 
         <ImageButton
             android:id="@+id/delete_button"
@@ -52,8 +52,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/trash4"
             android:layout_margin="5dp"
-
-            android:visibility="visible"/>
+            android:visibility="invisible"/>
 
         <ImageButton
             android:id="@+id/love_button"

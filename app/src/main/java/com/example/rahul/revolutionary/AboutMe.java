@@ -28,7 +28,7 @@ import java.util.Random;
 
 public class AboutMe extends AppCompatActivity {
 
-    private static final int MAX_LENGTH = 20;
+    private static final int MAX_LENGTH = 40;
     private static final int PICK_PHOTO = 0;
     private Uri imageUri = null,resultUri=null;
     String ImageUrl = null;
@@ -74,30 +74,15 @@ public class AboutMe extends AppCompatActivity {
                 website.setText(dataSnapshot.child("website").getValue(String.class));
                 aboutYourself.setText(dataSnapshot.child("about").getValue(String.class));
 
-                if(ImageUrl == null){
-                    ImageUrl = mAuth.getCurrentUser().getPhotoUrl().toString();
-                    if (ImageUrl != null){
-                        Picasso.with(AboutMe.this).load(ImageUrl).fit().centerCrop().into(profilePic);
-                        ImageUrl=null;
-                    }
-
-                }else{
+                if(ImageUrl.length()==0){}else{
                     Picasso.with(AboutMe.this).load(ImageUrl).fit().centerCrop().into(profilePic);
                 }
-
-                if(userName.getText().toString().length()==0){
-                    userName.setText(mAuth.getCurrentUser().getDisplayName());
-                    userEmail.setText(mAuth.getCurrentUser().getEmail());
-                }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
         });
-
-       // resultUri = mAuth.getCurrentUser().getPhotoUrl();
 
         done.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,15 +119,25 @@ public class AboutMe extends AppCompatActivity {
             pd.dismiss();
             finish();
         }else {
-            if(ImageUrl!=null){
+            if(ImageUrl.length()!=0){
 
-                userStorage = FirebaseStorage.getInstance().getReferenceFromUrl(ImageUrl);
-                userStorage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Toast.makeText(AboutMe.this,"previous profile pic deleted from database successfully",Toast.LENGTH_SHORT).show();
-                    }
-                });
+
+
+                try{
+                    userStorage = FirebaseStorage.getInstance().getReferenceFromUrl(ImageUrl);
+
+                }catch(IllegalArgumentException e){
+                    userStorage = null;
+                }
+                if(userStorage!=null){
+                    userStorage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            Toast.makeText(AboutMe.this,"previous profile pic deleted from database successfully",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
 
                 mStorage.putFile(resultUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override

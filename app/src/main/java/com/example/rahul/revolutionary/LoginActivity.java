@@ -25,9 +25,19 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.util.Random;
 
 public class LoginActivity extends AppCompatActivity {
 
+    private static final int MAX_LENGTH = 20;
     private static final int RC_SIGN_IN = 1;
     private SignInButton mGoogleBtn;
     private GoogleApiClient mGoogleApiClient;
@@ -138,7 +148,7 @@ public class LoginActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithCredential:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                          //  updateUI(user);
+                            updateDatabase(user);
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithCredential:failure", task.getException());
@@ -153,5 +163,47 @@ public class LoginActivity extends AppCompatActivity {
                 });
 
 
+    }
+
+    private void updateDatabase(final FirebaseUser user) {
+
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference().child("users");
+        userRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.hasChild(user.getUid())){
+
+                }
+                else {
+                    DatabaseReference usr = FirebaseDatabase.getInstance().getReference().child("users").child(user.getUid());
+                    usr.child("userName").setValue(user.getDisplayName());
+                    usr.child("userEmail").setValue(user.getEmail());
+                    if (user.getPhotoUrl() != null){
+                        usr.child("profilePic").setValue(user.getPhotoUrl().toString());
+                        StorageReference mStorage = FirebaseStorage.getInstance().getReference().child("profile_pics").child(randomize());
+                    }else{
+                        usr.child("profilePic").setValue("");
+                    }
+                    usr.child("website").setValue("");
+                    usr.child("about").setValue("");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+    public static String randomize() {
+        Random generator = new Random();
+        StringBuilder randomStringBuilder = new StringBuilder();
+        int randomLength = generator.nextInt(MAX_LENGTH);
+        char tempChar;
+        for (int i = 0; i < randomLength; i++){
+            tempChar = (char) (generator.nextInt(96) + 32);
+            randomStringBuilder.append(tempChar);
+        }
+        return randomStringBuilder.toString();
     }
 }

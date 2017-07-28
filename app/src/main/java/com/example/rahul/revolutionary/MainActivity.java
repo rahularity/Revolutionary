@@ -25,6 +25,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -42,7 +43,7 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int MAX_LENGTH = 20;
+    private static final int MAX_LENGTH = 40;
     public DrawerLayout mDrawerLayout;
     public ActionBarDrawerToggle mDrawerToggle;
     public String[] mDrawableListItem;
@@ -65,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-        myToolbar.setTitle(R.string.app_name);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -240,13 +240,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void setTheScreen(){
-        dialog.dismiss();
        FirebaseRecyclerAdapter<Post,PostViewHolder> firebaseRecyclerAdapter = new FirebaseRecyclerAdapter<Post,PostViewHolder>(
                Post.class,
                R.layout.post_display_blueprint,
                PostViewHolder.class,
                postsNode
        ) {
+           @Override
+           public void onDataChanged() {
+               if(dialog != null && dialog.isShowing()){
+                   dialog.dismiss();
+               }
+           }
+
            @Override
            protected void populateViewHolder(final PostViewHolder viewHolder, Post model, int position) {
                final String key = getRef(position).getKey();

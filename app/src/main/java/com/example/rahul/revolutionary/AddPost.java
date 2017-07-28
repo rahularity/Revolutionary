@@ -36,7 +36,7 @@ import java.util.Random;
 
 public class AddPost extends AppCompatActivity {
 
-    private static final int MAX_LENGTH = 20;
+    private static final int MAX_LENGTH = 40;
     private static final int PICK_PHOTO = 0;
     private ImageView post_image;
     private EditText title,content;
@@ -139,34 +139,57 @@ public class AddPost extends AppCompatActivity {
                 titleString = title.getText().toString().trim();
                 contentString = content.getText().toString().trim();
                 category_from_spinner = category.getSelectedItem().toString();
-                if(titleString.length()!=0 && contentString.length()!=0) {
 
-                    mProgress_save_to_database.setMessage("saving data...");
-                    mProgress_save_to_database.show();
-                    mProgress_save_to_database.setCancelable(false);
-                    saveNormally();
+                if(key!=null){
+                    if(titleString.length()!=0 && contentString.length()!=0) {
+
+                        mProgress_save_to_database.setMessage("saving data...");
+                        mProgress_save_to_database.show();
+                        mProgress_save_to_database.setCancelable(false);
+                        saveNormally();
+                    }else{
+                        Toast.makeText(AddPost.this,"Please write some information before saving...",Toast.LENGTH_LONG).show();
+                    }
                 }else{
-                    Toast.makeText(AddPost.this,"Please write some information before saving...",Toast.LENGTH_LONG).show();
+                    if (titleString.length()!=0 && contentString.length()!=0 && resultUri!=null){
+                        mProgress_save_to_database.setMessage("saving data...");
+                        mProgress_save_to_database.show();
+                        mProgress_save_to_database.setCancelable(false);
+                        saveNormally();
+                    }else {
+                        Toast.makeText(AddPost.this,"make sure to fill all the details",Toast.LENGTH_LONG).show();
+                    }
                 }
+
             }
         });
 
         save_anonymous.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mProgress_save_to_database.setMessage("saving data...");
-//                mProgress_save_to_database.show();
                 titleString = title.getText().toString().trim();
                 contentString = content.getText().toString().trim();
                 category_from_spinner = category.getSelectedItem().toString();
-                if(titleString.length()!=0 && contentString.length()!=0) {
 
-                    mProgress_save_to_database.setMessage("saving data...");
-                    mProgress_save_to_database.show();
-                    mProgress_save_to_database.setCancelable(false);
-                    saveAnonymously();
+                if(key!=null){
+                    if(titleString.length()!=0 && contentString.length()!=0) {
+
+                        mProgress_save_to_database.setMessage("saving data...");
+                        mProgress_save_to_database.show();
+                        mProgress_save_to_database.setCancelable(false);
+                        saveAnonymously();
+                    }else{
+                        Toast.makeText(AddPost.this,"Please write some information before saving...",Toast.LENGTH_LONG).show();
+                    }
                 }else{
-                    Toast.makeText(AddPost.this,"Please write some information before saving...",Toast.LENGTH_LONG).show();
+                    if (titleString.length()!=0 && contentString.length()!=0 && resultUri!=null){
+                        mProgress_save_to_database.setMessage("saving data...");
+                        mProgress_save_to_database.show();
+                        mProgress_save_to_database.setCancelable(false);
+                        saveAnonymously();
+                    }else {
+                        Toast.makeText(AddPost.this,"make sure to fill all the details",Toast.LENGTH_LONG).show();
+                    }
                 }
 
             }
